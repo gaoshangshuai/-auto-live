@@ -1,0 +1,33 @@
+name: 自动更新直播源
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 */4 * * *'  # 每 4 小时自动运行
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 获取仓库内容
+        uses: actions/checkout@v2
+
+      - name: 设置 Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: 安装依赖（可跳过）
+        run: pip install requests
+
+      - name: 运行脚本
+        run: python main.py
+
+      - name: 提交并上传更新内容
+        run: |
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git pull
+          git add channels.m3u
+          git commit -m "自动更新频道源 $(date '+%Y-%m-%d %H:%M:%S')" || echo "无变化"
+          git push
